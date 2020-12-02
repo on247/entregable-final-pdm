@@ -71,12 +71,16 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
   }
 
   void getInitialPosition() async {
+    // obtener ubicacion de inicio
     Position position = await Geolocator.getCurrentPosition();
     LatLng initialPosition = toLng(position);
+    // agregar un marcador con la ubicacion de inicio
     startMarker =
         Marker(markerId: MarkerId("Start"), position: initialPosition);
     markers.add(startMarker);
+    // guardar ubicacion , despues se usara como ubicacion previa para calcular distancias
     prevLocation = initialPosition;
+    // mover el mapa a la ubicacion inicial
     setState(() {
       mapController.animateCamera(
         CameraUpdate.newCameraPosition(
@@ -90,10 +94,12 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
   }
 
   void saveLocation(Position position) {
+    // guardar ubicacion previa y agregar a la lista de puntos de la ruta
     prevLocation = toLng(position);
     routePoints.add(prevLocation);
   }
 
+  // ajustar nivel de zoom para que la ruta completa sea visible
   void fitMarkers() async {
     LatLng startMarkerLoc = startMarker.position;
     LatLng endMarkerLoc = endMarker.position;
@@ -111,16 +117,22 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
     }
   }
 
+  // mover el marcado que indica el fin de la ruta (la ubicacion actual)
   void updateCurrentLocationMarker(Position position) {
+    // quitar el marcador de fin que ya esta en mapa
     markers.remove(endMarker);
+    // crear marcador nuevo
     LatLng markerPosition = new LatLng(position.latitude, position.longitude);
     endMarker = Marker(
       markerId: MarkerId("2"),
       position: markerPosition,
     );
+    // agregar a map
     markers.add(endMarker);
   }
 
+  // genera una linea poligiona de color rojo con los puntos (LatLng) de la ruta ,
+  // pasados desde la pantalla anterior en el estado
   void updateRoutePolygon() {
     Polyline newPolyline = Polyline(
         polylineId: PolylineId(
@@ -132,18 +144,20 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
     routePolylines.add(newPolyline);
   }
 
+  // calula las estadisitcas actuales segun la ubicacion previa , la actual y
+  // tiempo transcurrido entre actualizaciones de GPS
   void updateStats(Position newPosition) {
     int deltaTime = stopwatch.elapsedMilliseconds - prevTime;
     prevTime = stopwatch.elapsedMilliseconds;
     LatLng newLocation = toLng(newPosition);
+    // calculo de metros recorridos entre las ubicaciones previa actual
     double deltaMeters = Geolocator.distanceBetween(prevLocation.latitude,
         prevLocation.longitude, newLocation.latitude, newLocation.longitude);
-
+    // agregar a distancia total
     distance += deltaMeters;
+    // calcular velocidad instanea
     speed = deltaMeters * (1000.0 / deltaTime) * 3.6;
-    if (speed > 5) {
-      print(speed);
-    }
+    // vel promedio y maxima
     avgSpeed = ((distance * 1000.0) / stopwatch.elapsedMilliseconds) * 3.6;
     topSpeed = max(topSpeed, speed);
   }
@@ -151,20 +165,35 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
   @override
   void initState() {
     super.initState();
+    // al inciar la pantalla
+    // inciar el contador de reloj;
     stopwatch.start();
+    // iniciar el timer para la actualizacion del cronometro
+    // refresh cada 1 s
     timerStream = generateTimerStream();
+    // inciar stream de ubicaciones
     positionStream = Geolocator.getPositionStream(distanceFilter: 10)
         .listen((Position position) {
       setState(() {
+        // para cada actualizacion
+
         if (timerRunning) {
+          // mover el marcador de ubicacion actual
           updateCurrentLocationMarker(position);
+          // recalcular estadisticas , solo si se pudo obtener una nueva ubicacion
           if (prevLocation != null) {
             updateStats(position);
           }
+          // guardar la ubicacion actual
           saveLocation(position);
+          // ajustar el mapa
           fitMarkers();
+          // redibujar la ruta
           updateRoutePolygon();
-        } else {
+        }
+        // si cronometro esta detenido la velocidadas es 0 , no se esta
+        // corriendo.
+        else {
           speed = 0;
         }
       });
@@ -292,6 +321,7 @@ class _RunInProgressWidgetState extends State<RunInProgressWidget> {
           textColor: Colors.white,
           child: Text("Terminar Carrera"),
           onPressed: () {
+            // al terminar carrera emite estado con estadisticas y la ruta
             BlocProvider.of<HomeBloc>(context).add(RunCompleteEvent(
                 totalTime: stopwatch.elapsed,
                 startDate: startTime,
