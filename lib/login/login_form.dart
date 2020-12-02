@@ -119,8 +119,8 @@ class _LoginFormState extends State<LoginForm> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xff0884cc),
-                Color(0xff04476e),
+                Colors.orange[600],
+                Colors.orange[900],
               ],
             ),
           ),

@@ -47,14 +47,13 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       }
     } else if (event is LoginWithFacebookEvent) {
       yield LoginLoadingState();
-      /*String errorCode = await _authProvider.signInWithFacebook();
+      String errorCode = await _authProvider.signInWithFacebook();
       if (errorCode != null) {
         String errorMessage = UserAuthProvider.errorMessages[errorCode];
         yield LoginErrorState(error: errorMessage, code: errorCode);
       } else {
         yield LoginSuccessState();
       }
-      */
     } else if (event is RegisterWithEmailEvent) {
       yield LoginLoadingState();
       String errorCode =
