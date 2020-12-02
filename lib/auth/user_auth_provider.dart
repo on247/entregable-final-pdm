@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 class UserAuthProvider {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: <String>['email']);
@@ -13,6 +14,7 @@ class UserAuthProvider {
     "user-not-found": "El usuario no existe",
     "wrong-password": "Contraseña Incorrecta",
     "invalid-email": "Indica un correo valido",
+    "error": "error al inciar sesion",
     "weak-password": "Indica una contraseña de al menos 6 caracteres",
   };
 
@@ -109,7 +111,7 @@ class UserAuthProvider {
     return null;
   }
 
-  /*Future<String> signInWithFacebook() async {
+  Future<String> signInWithFacebook() async {
     // Facebook sign in
     try {
       AccessToken accessToken = await FacebookAuth.instance.login();
@@ -129,11 +131,16 @@ class UserAuthProvider {
       print("Firebase auth token: $firebaseAuthToken");
     } catch (e) {
       if (e is FacebookAuthException) {
+        return e.errorCode;
+      }
+      if (e is FacebookAuthException) {
         if (e.errorCode == "CANCELLED") {
           return "LOGIN_CANCELLED";
         }
+        return e.errorCode;
       }
+      return "error";
     }
     return null;
-  }*/
+  }
 }
