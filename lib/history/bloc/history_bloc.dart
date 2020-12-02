@@ -36,9 +36,6 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     // agregar cada ojeto a una lista
     var carreras =
         await FirebaseFirestore.instance.collection("carreras").get();
-
-    print("q");
-    // QuerySnapshot query
     _runList =
         carreras.docs.map((elemento) => Run.fromJson(elemento.data())).toList();
   }
